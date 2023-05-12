@@ -1,0 +1,29 @@
+server:
+  port: 9605
+
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  application:
+    name: service-oss
+  servlet:
+    multipart:
+      max-file-size: 10MB     #单个文件最大限制
+      max-request-size: 50MB  #多个文件最大限制
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+
+aliyun:
+  oss:
+    bucketName: dxssmjj
+    endpoint: oss-cn-shenzhen.aliyuncs.com
+    accessKeyId: LTAI5tJej914Y4tAMJDVt1eh
+    secret: o082qXcgCpX64eLxfrBd4pTzmrZCws

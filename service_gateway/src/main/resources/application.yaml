@@ -1,0 +1,61 @@
+server:
+  port: 80
+spring:
+  application:
+    name: service-gateway
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+#  main:
+#    web-application-type: reactive
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+    gateway:
+      globalors: #跨域问题
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:8080"
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 360000
+            allowedMethods:
+              - GET
+              - POST
+              - DELETE
+              - PUT
+              - OPTIONS
+              - HEAD
+          default-filters:
+            - DedupeResponseHeader=Vary Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: service-tutor
+          uri: lb://service-tutor
+          predicates:
+            - Path=/tutor/**
+        - id: service-user
+          uri: lb://service-user
+          predicates:
+            - Path=/user/**
+        - id: service-makeAppointment
+          uri: lb://service-makeAppointment
+          predicates:
+            - Path=/makeAppointment/**
+        - id: service-msm
+          uri: lb://service-msm
+          predicates:
+            - Path=/msm/**
+        - id: service-oss
+          uri: lb://service-oss
+          predicates:
+            - Path=/oss/**
+        - id: service-evaluate
+          uri: lb://service-evaluate
+          predicates:
+            - Path=/evaluate/**

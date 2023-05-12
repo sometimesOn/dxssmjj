@@ -1,0 +1,40 @@
+server:
+  port: 9604
+
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  application:
+    name: service-msm
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  rabbitmq:
+    host: 45.26
+    port: 5672
+    username: guest
+    password: guest
+  redis:
+    host: 45.86.74.165
+    port: 6379
+    database: 0
+    timeout: 1800000
+    lettuce:
+      pool:
+        max-active: 20
+        max-wait: -1
+        max-idle: 5
+        min-idle: 0
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+
+aliyun:
+  sms:
+    regionId: default
+    accessKeyId: LTAI5tJej914Y4tAMJDVt1eh
+    secret: o082qXcgCpX64eLxfrBd4pTzmrZCws

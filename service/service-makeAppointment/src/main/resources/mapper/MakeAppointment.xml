@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jia.dxssmjj.mapper.MakeAppointmentMapper">
+    <select id="getHourStringList" resultType="java.lang.String">
+        select hour_string from make_appointment where user_id = #{userId} and status in ('1','2','3')
+    </select>
+    <select id="findComplete" resultType="com.jia.dxssmjj.model.po.makeAppointment.MakeAppointment">
+        select * from make_appointment where tutor_id = #{tutorId}  and status = '7'
+    </select>
+</mapper>
