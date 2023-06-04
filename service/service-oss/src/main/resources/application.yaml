@@ -3,6 +3,17 @@ server:
 
 
 spring:
+  redis:
+    host: 192.168.71.138
+    port: 6379
+    database: 0
+    timeout: 1800000
+    lettuce:
+      pool:
+        max-active: 20
+        max-wait: -1
+        max-idle: 5
+        min-idle: 0
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -19,8 +30,7 @@ spring:
     active: dev
   cloud:
     nacos:
-      server-addr: 127.0.0.1:8848
-
+      server-addr: 192.168.71.138:8848
 aliyun:
   oss:
     bucketName: dxssmjj

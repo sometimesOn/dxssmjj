@@ -19,4 +19,6 @@ public interface UserService extends IService<User> {
     Result payment(Long makeAppointmentId, Long userId);
 
     Result confirm(Long makeAppointmentId);
+
+    Result bindUserPhone(String phone, String code, Long userId);
 }

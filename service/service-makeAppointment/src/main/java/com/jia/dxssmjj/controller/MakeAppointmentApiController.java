@@ -1,6 +1,7 @@
 package com.jia.dxssmjj.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jia.dxssmjj.common.result.Result;
 import com.jia.dxssmjj.common.utils.AuthContextHolder;
 import com.jia.dxssmjj.model.dto.MakeAppointmentDTO;
@@ -14,7 +15,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,12 +38,16 @@ public class MakeAppointmentApiController {
 
 
     @PostMapping("acceptMakeAppointment")
-    public Result acceptMakeAppointment(@RequestBody MakeAppointment makeAppointment,HttpServletRequest request){
+    @ApiOperation("接受订单")
+    public Result acceptMakeAppointment(
+            @RequestBody MakeAppointment makeAppointment,
+            HttpServletRequest request){
 
         Long userId = AuthContextHolder.getUserId(request);
         TutorSet tutor = tutorFeignClient.findTutorIdByUserId(userId);
 
-        MakeAppointment appointment = makeAppointmentService.getById(makeAppointment.getId());
+        MakeAppointment appointment =
+                makeAppointmentService.getById(makeAppointment.getId());
         appointment.setStatus("3");
         appointment.setTutorId(tutor.getId());
         boolean update = makeAppointmentService.updateById(appointment);
@@ -56,21 +60,34 @@ public class MakeAppointmentApiController {
 
     @GetMapping("findMakeAppointmentNoTutor")
     @ApiOperation("找寻无主的订单")
-    public Result findMakeAppointmentNoTutor(){
+    public Result findMakeAppointmentNoTutor(
+            @RequestParam("queryString") String queryString,
+            @RequestParam("limit") Long limit,
+            @RequestParam("current") Long current){
+        // 创建Page对象
+        Page<MakeAppointment> page = new Page<>(current,limit);
+        // 创建条件构造器
         QueryWrapper<MakeAppointment> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("tutor_id",0);
+        // 条件约束
+        queryWrapper.eq("tutor_id",0).
+                orderByDesc("create_time")
+                .like("subject",queryString)
+                .eq("auth",1);
 
-        List<MakeAppointment> list = makeAppointmentService.list(queryWrapper);
-        return Result.ok(list);
+        //查找数据库中的数据并返回Page对象
+        Page<MakeAppointment> makeAppointmentPage =
+                makeAppointmentService.page(page,queryWrapper);
+        return Result.ok(makeAppointmentPage);
     }
 
     @ApiOperation(value = "添加预约记录")
     @PostMapping("saveMakeAppointment")
     @Transactional
-    public Result saveMakeAppointment(@RequestBody MakeAppointmentDTO makeAppointmentDTO,HttpServletRequest request){
+    public Result saveMakeAppointment(
+            @RequestBody MakeAppointmentDTO makeAppointmentDTO,
+            HttpServletRequest request){
 
         String hourString = "";
-
 
         for(List<String> stringList : makeAppointmentDTO.getHour()){
             for(String s : stringList){
@@ -78,10 +95,12 @@ public class MakeAppointmentApiController {
             }
         }
 
+        // 获取请求用户的id
         Long userId = AuthContextHolder.getUserId(request);
 
         //判断时间是否重复
-        List<String> hourStringList = makeAppointmentService.getHourStringList(userId);
+        List<String> hourStringList =
+                makeAppointmentService.getHourStringList(userId);
         String hourStringOld = "";
         for(String s : hourStringList){
             hourStringOld = hourStringOld + s;
@@ -96,18 +115,23 @@ public class MakeAppointmentApiController {
             }
         }
 
+        // 判断是需求订单还是预约订单
         MakeAppointment makeAppointment = new MakeAppointment();
         if(makeAppointmentDTO.getTutorId() > 0){
-            TutorSet tutorSet = tutorFeignClient.findById(makeAppointmentDTO.getTutorId());
-            BigDecimal total = new BigDecimal(makeAppointmentDTO.getHour().size()*2).multiply(tutorSet.getHourPrice());
+            TutorSet tutorSet =
+                    tutorFeignClient.findById(makeAppointmentDTO.getTutorId());
+            BigDecimal total =
+                    new BigDecimal(makeAppointmentDTO.getHour().size()*2)
+                            .multiply(tutorSet.getHourPrice());
             makeAppointment.setTotal(total);
         } else if (makeAppointmentDTO.getTutorId() == 0) {
             BigDecimal total = makeAppointmentDTO.getPrice();
             makeAppointment.setTotal(total);
         }
 
-        String serialNumber  = UUID.randomUUID().toString() + System.currentTimeMillis();
-
+        // 对象赋值
+        String serialNumber  = UUID.randomUUID().toString()
+                + System.currentTimeMillis();
         makeAppointment.setHourString(hourString);
         makeAppointment.setUserId(userId);
         makeAppointment.setTutorId(makeAppointmentDTO.getTutorId());
@@ -131,20 +155,28 @@ public class MakeAppointmentApiController {
 
     @ApiOperation("查询预约表")
     @PostMapping("findMakeAppointmentByStatus")
-    public Result findMakeAppointmentByStatus(@RequestBody MakeAppointment makeAppointment, HttpServletRequest request){
+    public Result findMakeAppointmentByStatus(
+            @RequestBody MakeAppointment makeAppointment,
+            HttpServletRequest request){
 
-        List<MyAppointmentDTO> list =  makeAppointmentService.findMakeAppointmentByStatus(makeAppointment,
-                request);
+        // 查询预约表
+        List<MyAppointmentDTO> list =
+                makeAppointmentService.findMakeAppointmentByStatus
+                        (makeAppointment, request);
 
         return Result.ok(list);
     }
 
 
     @PostMapping("findMakeAppointmentByStatusFromTutor")
-    public Result findMakeAppointmentByStatusFromTutor(@RequestBody MakeAppointment makeAppointment, HttpServletRequest request){
+    @ApiOperation("教员端查找订单列表")
+    public Result findMakeAppointmentByStatusFromTutor(
+            @RequestBody MakeAppointment makeAppointment,
+            HttpServletRequest request){
 
-        List<TutorAcceptDTO> list =  makeAppointmentService.findMakeAppointmentByStatusFromTutor(makeAppointment,
-                request);
+        List<TutorAcceptDTO> list =
+                makeAppointmentService.findMakeAppointmentByStatusFromTutor
+                        (makeAppointment, request);
 
         return Result.ok(list);
     }
@@ -152,8 +184,10 @@ public class MakeAppointmentApiController {
     @ApiOperation("取消预约记录")
     @PostMapping("cancelMakeAppointment")
     @Transactional
-    public Result cancelMakeAppointment(@RequestBody MyAppointmentDTO myAppointmentDTO){
-        boolean isCancel = makeAppointmentService.cancelMakeAppointment(myAppointmentDTO);
+    public Result cancelMakeAppointment(
+            @RequestBody MyAppointmentDTO myAppointmentDTO){
+        boolean isCancel =
+                makeAppointmentService.cancelMakeAppointment(myAppointmentDTO);
         if(isCancel){
             return Result.ok();
         }else {
@@ -164,8 +198,10 @@ public class MakeAppointmentApiController {
     @ApiOperation("删除预约记录")
     @PostMapping("deleteMakeAppointment")
     @Transactional
-    public Result deleteMakeAppointment(@RequestBody MyAppointmentDTO myAppointmentDTO){
-        boolean isDelete = makeAppointmentService.deleteMakeAppointment(myAppointmentDTO);
+    public Result deleteMakeAppointment(
+            @RequestBody MyAppointmentDTO myAppointmentDTO){
+        boolean isDelete = makeAppointmentService.
+                deleteMakeAppointment(myAppointmentDTO);
         if(isDelete){
             return Result.ok();
         }else {
@@ -175,8 +211,10 @@ public class MakeAppointmentApiController {
 
     @ApiOperation("重新预约")
     @PostMapping("AgainMakeAppointmentById")
-    public Result AgainMakeAppointmentById(@RequestBody MyAppointmentDTO myAppointmentDTO){
-        boolean isCancel = makeAppointmentService.AgainMakeAppointmentById(myAppointmentDTO);
+    public Result AgainMakeAppointmentById(
+            @RequestBody MyAppointmentDTO myAppointmentDTO){
+        boolean isCancel = makeAppointmentService.
+                AgainMakeAppointmentById(myAppointmentDTO);
         if(isCancel){
             return Result.ok();
         }else {
@@ -185,9 +223,11 @@ public class MakeAppointmentApiController {
     }
 
     @PostMapping("complete")
+    @ApiOperation("完成订单")
     public String complete(Long makeAppointmentId,String status){
 
-        MakeAppointment makeAppointment = makeAppointmentService.getById(makeAppointmentId);
+        MakeAppointment makeAppointment =
+                makeAppointmentService.getById(makeAppointmentId);
         makeAppointment.setStatus(status);
 
         makeAppointmentService.updateById(makeAppointment);
@@ -196,27 +236,36 @@ public class MakeAppointmentApiController {
     }
 
     @GetMapping("getMakeAppointmentById")
-    public MakeAppointment getMakeAppointmentById(@RequestParam("makeAppointmentId") Long makeAppointmentId){
-        MakeAppointment makeAppointment = makeAppointmentService.getById(makeAppointmentId);
+    @ApiOperation("根据id查找订单")
+    public MakeAppointment getMakeAppointmentById(
+            @RequestParam("makeAppointmentId") Long makeAppointmentId){
+        MakeAppointment makeAppointment =
+                makeAppointmentService.getById(makeAppointmentId);
         return makeAppointment;
     }
 
     @GetMapping("getMakeAppointmentByIdFromTutor")
-    public MakeAppointment getMakeAppointmentByIdFromTutor(@RequestParam("userId") Long userId){
+    @ApiOperation("教员端根据id查找订单")
+    public MakeAppointment getMakeAppointmentByIdFromTutor(
+            @RequestParam("userId") Long userId){
         TutorSet tutor = tutorFeignClient.findTutorIdByUserId(userId);
         QueryWrapper<MakeAppointment> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tutor_id",tutor.getId());
 
         MakeAppointment one = makeAppointmentService.getOne(queryWrapper);
 
-        MakeAppointment makeAppointment = makeAppointmentService.getById(one.getId());
+        MakeAppointment makeAppointment =
+                makeAppointmentService.getById(one.getId());
         return makeAppointment;
     }
 
     @GetMapping("updateMakeAppointmentById")
-    public Result updateMakeAppointmentById(@RequestParam("makeAppointmentId") Long makeAppointmentId,
-                                            @RequestParam("status") String status){
-        MakeAppointment makeAppointment = makeAppointmentService.getById(makeAppointmentId);
+    @ApiOperation("更新订单")
+    public Result updateMakeAppointmentById(
+            @RequestParam("makeAppointmentId") Long makeAppointmentId,
+            @RequestParam("status") String status){
+        MakeAppointment makeAppointment =
+                makeAppointmentService.getById(makeAppointmentId);
         makeAppointment.setStatus(status);
 
         boolean b = makeAppointmentService.updateById(makeAppointment);
@@ -229,9 +278,12 @@ public class MakeAppointmentApiController {
 
 
     @GetMapping("findComplete")
-    public Integer findComplete(@RequestParam("tutorId") Long tutorId){
+    @ApiOperation("查找完成的订单")
+    public Integer findComplete(
+            @RequestParam("tutorId") Long tutorId){
 
-        List<MakeAppointment> list =  makeAppointmentService.findComplete(tutorId);
+        List<MakeAppointment> list =
+                makeAppointmentService.findComplete(tutorId);
         return list.size();
     }
 

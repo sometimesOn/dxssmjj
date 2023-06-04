@@ -41,6 +41,14 @@ public class UserApiController {
         return Result.ok(info);
     }
 
+    @PutMapping("bindUserPhone")
+    public Result bindUserPhone(@RequestParam("phone") String phone,
+                                @RequestParam("code") String code,
+                                HttpServletRequest request){
+        Long userId = AuthContextHolder.getUserId(request);
+        return userService.bindUserPhone(phone,code,userId);
+    }
+
     @PostMapping("logon")
     @ApiOperation("用户注册")
     @Transactional
@@ -111,6 +119,18 @@ public class UserApiController {
     public Result confirmMakeAppointment(@RequestParam("makeAppointmentId") Long makeAppointmentId){
         Result result = userService.confirm(makeAppointmentId);
         return result;
+    }
+
+    @PutMapping("updateRole")
+    public Integer updateRole(@RequestParam("userId") Long userId){
+        User user = userService.getById(userId);
+        user.setRole("1");
+
+        boolean b = userService.updateById(user);
+        if(b){
+            return 1;
+        }
+        return 0;
     }
 
 }

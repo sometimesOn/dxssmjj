@@ -48,8 +48,8 @@ public class TutorSetController {
         String goodSubject = queryTutorParamsDTO.getGoodSubject();
         //String state = queryTutorParamsDTO.getState();
 
-        queryWrapper.like(StringUtils.hasText(nickname),"nickname",nickname);
-        queryWrapper.eq(StringUtils.hasText(goodSubject),"good_subject",goodSubject);
+        queryWrapper.like(StringUtils.hasText(nickname),"real_name",nickname);
+        queryWrapper.like(StringUtils.hasText(goodSubject),"good_subject",goodSubject);
         queryWrapper.eq("college_auth",2);
 
         Page<TutorSet> tutorSetPage = tutorSetService.page(page,queryWrapper);

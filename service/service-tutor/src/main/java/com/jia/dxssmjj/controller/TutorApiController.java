@@ -127,4 +127,10 @@ public class TutorApiController {
         TutorSet tutor = tutorSetService.getOne(queryWrapper);
         return Result.ok(tutor.getHourPrice());
     }
+
+    @GetMapping("getTutorById")
+    public Result getTutorById(@RequestParam("id") Long id){
+        TutorSet tutor = tutorSetService.getById(id);
+        return Result.ok(tutor);
+    }
 }

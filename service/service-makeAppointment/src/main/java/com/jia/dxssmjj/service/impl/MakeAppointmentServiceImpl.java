@@ -44,24 +44,25 @@ public class MakeAppointmentServiceImpl extends ServiceImpl<MakeAppointmentMappe
         Long userId = AuthContextHolder.getUserId(request);
 
         queryWrapper.eq("user_id",userId);
-        queryWrapper.gt("tutor_id",0);
+        queryWrapper.gt("tutor_id",0).eq("auth",1);
+
 
         List<MakeAppointment> makeAppointmentList = baseMapper.selectList(queryWrapper);
 
         List<MyAppointmentDTO> list = new ArrayList<>();
 
         for (MakeAppointment appointment : makeAppointmentList){
-            TutorSet tutorSet = tutorFeignClient.findById(appointment.getTutorId());
             MyAppointmentDTO myAppointmentDTO = new MyAppointmentDTO();
-            myAppointmentDTO.setMakeAppointmentId(appointment.getId());
+            TutorSet tutorSet = tutorFeignClient.findById(appointment.getTutorId());
             myAppointmentDTO.setHeadImageUrl(tutorSet.getHeadImageUrl());
+            myAppointmentDTO.setPersonIntr(tutorSet.getPersonIntr());
+            myAppointmentDTO.setTutorName(tutorSet.getNickname());
+            myAppointmentDTO.setMakeAppointmentId(appointment.getId());
             myAppointmentDTO.setTutorId(appointment.getTutorId());
             myAppointmentDTO.setStatus(appointment.getStatus());
             myAppointmentDTO.setTotal(appointment.getTotal());
             myAppointmentDTO.setSubject(appointment.getSubject());
-            myAppointmentDTO.setPersonIntr(tutorSet.getPersonIntr());
             myAppointmentDTO.setHourString(appointment.getHourString());
-            myAppointmentDTO.setTutorName(tutorSet.getNickname());
             list.add(myAppointmentDTO);
         }
 

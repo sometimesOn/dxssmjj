@@ -42,6 +42,7 @@ public class TutorSetServiceImpl extends ServiceImpl<TutorSetMapper, TutorSet> i
         tutorSet.setNickname(user.getNickName());
         tutorSet.setCollegeAuth(1);
         tutorSet.setUserId(userId);
+        userFeignClient.updateRole(userId);
 
         baseMapper.insert(tutorSet);
 

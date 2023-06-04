@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Data
-@TableName("make_Appointment")
+@TableName("make_appointment")
 @ApiModel(description = "预约表")
 public class MakeAppointment extends BaseEntity {
 
@@ -37,7 +37,9 @@ public class MakeAppointment extends BaseEntity {
     @TableField("serial_number")
     private String serialNumber;
 
-
+    @ApiModelProperty(value = "认证")
+    @TableField("auth")
+    private Integer auth;
 
     @ApiModelProperty(value = "微信")
     @TableField("weChat")

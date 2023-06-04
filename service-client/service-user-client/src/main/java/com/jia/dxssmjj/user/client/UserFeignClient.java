@@ -4,6 +4,7 @@ import com.jia.dxssmjj.model.po.user.User;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient("service-user")
@@ -12,5 +13,8 @@ public interface UserFeignClient {
 
     @GetMapping("/user/api/getUser")
     public User getUser(@RequestParam("userId") Long userId);
+
+    @PutMapping("/user/api/updateRole")
+    public Integer updateRole(@RequestParam("userId") Long userId);
 
 }

@@ -1,6 +1,7 @@
 package com.jia.dxssmjj.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jia.dxssmjj.common.exception.CustomException;
 import com.jia.dxssmjj.common.helper.JwtHelper;
@@ -20,6 +21,7 @@ import com.jia.dxssmjj.tutor.client.TutorFeignClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
@@ -58,7 +60,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if(user == null && StringUtils.hasText(userLoginDTO.getPhone())){
             user = new User();
             user.setPhone(userLoginDTO.getPhone());
-            user.setNickName("");
+            user.setNickName(userLoginDTO.getPhone());
 
             baseMapper.insert(user);
         }
@@ -169,5 +171,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return Result.fail();
 
+    }
+
+    @Override
+    @Transactional
+    public Result bindUserPhone(String phone, String code, Long userId) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("phone",phone);
+
+        User one = baseMapper.selectOne(queryWrapper);
+        if(one != null){
+            return Result.fail("一个手机号只能绑定一个号码");
+        }
+        String codeFromRedis = redisTemplate.opsForValue().get(phone);
+        if(StringUtils.hasText(codeFromRedis)){
+            if(code.equals(codeFromRedis)){
+                User user = baseMapper.selectById(userId);
+                user.setPhone(phone);
+                baseMapper.updateById(user);
+                return Result.ok();
+            }
+            return Result.fail("验证码不一致");
+        }
+        return Result.fail();
     }
 }

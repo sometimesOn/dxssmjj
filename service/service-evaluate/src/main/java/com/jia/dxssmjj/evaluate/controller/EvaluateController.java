@@ -90,6 +90,7 @@ public class EvaluateController {
 
 
     @GetMapping("getEvaluateAndMakeAppointment")
+    @ApiOperation("获取评价")
     public Result getEvaluate(HttpServletRequest request){
 
         Long userId = AuthContextHolder.getUserId(request);
@@ -120,6 +121,15 @@ public class EvaluateController {
         }
 
         return Result.ok(list);
+    }
+
+    @GetMapping("getEvaluateAverageRate")
+    @ApiOperation("获取评价平均得分")
+    public Result getEvaluateAverageRate(@RequestParam("tutorId") Long tutorId){
+
+        Result result =  evaluateService.getEvaluateAverageRate(tutorId);
+
+        return result;
     }
 
 

@@ -28,6 +28,11 @@
             <artifactId>service-tutor-client</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.jia.dxssmjj</groupId>
+            <artifactId>service-user-client</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>
